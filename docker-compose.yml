@@ -1,0 +1,46 @@
+#how to install docker, docker-compose and traefik: https://www.howtoforge.com/tutorial/ubuntu-docker-traefik-proxy/
+version: "3.5"
+
+networks:
+    default:
+        name: argentum_capital
+
+services:
+    php-fpm:
+        build: # Info to build the Docker image
+            context: ./ # Specify where the Dockerfile is located (e.g. in the root directory of the project)
+            dockerfile: ./docker/php/Dockerfile # Specify the name of the Dockerfile
+        volumes:
+            - ./:/var/www/project/ # Location of the project for php-fpm. Note this should be the same for NGINX.
+            - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+        container_name: php-fpm-argentum
+        depends_on:
+            - mysql
+        restart: on-failure
+
+    mysql:
+        image: mysql:5
+        restart: on-failure
+        working_dir: /app/var/www/project
+        environment:
+            MYSQL_DATABASE: 'argentum_database'
+            MYSQL_USER: 'admin'
+            MYSQL_PASSWORD: 'password'
+            MYSQL_ROOT_PASSWORD: 'password'
+            MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+            MYSQL_ROOT_HOST: '%'
+        volumes:
+            - ./docker/mysql/db:/etc/mysql/conf.d/
+            - argentum_db:/var/lib/mysql # Persist the database in a Docker volume.
+        ports:
+            - 3305:3306
+        container_name: mysql-argentum
+        healthcheck:
+            test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-ppassword"]
+            interval: 10s
+            timeout: 2s
+            retries: 3
+
+volumes:
+    argentum_db:
+

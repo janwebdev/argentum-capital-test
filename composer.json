@@ -1,0 +1,5 @@
+{
+    "autoload": {
+        "classmap": ["./contracts", "./modules", "./services","./database"]
+    }
+}
